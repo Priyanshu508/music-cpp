@@ -69,15 +69,16 @@ void Player::build_order(int keep_current) {
     }
 }
 
-void Player::next() {
+void Player::next(bool automatic) {
     if (order_.empty() || current_ < 0) return;
 
-    if (repeat_ == RepeatMode::One) { start_current(); return; }
+    // repeat-one only loops on NATURAL track end; manual 'n' skips forward
+    if (automatic && repeat_ == RepeatMode::One) { start_current(); return; }
 
     ++order_pos_;
     if (order_pos_ >= (int)order_.size()) {
         if (repeat_ == RepeatMode::All) order_pos_ = 0;
-        else return;  // end of queue, stay stopped
+        else return;
     }
     current_ = order_[order_pos_];
     start_current();
