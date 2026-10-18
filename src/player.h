@@ -21,7 +21,8 @@ public:
     bool play_index(int idx);         // play song #idx (path set via set_paths)
     void set_paths(const std::vector<std::string>* paths) { paths_ = paths; }
 
-    void next();
+    
+    void next(bool automatic = false);
     void previous();
     void toggle_shuffle();
     void cycle_repeat();              // Off -> All -> One -> Off

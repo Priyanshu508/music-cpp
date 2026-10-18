@@ -32,7 +32,7 @@ void run_ui(std::vector<std::filesystem::path>& songs) {
     names.reserve(songs.size());
     for (const auto& p : songs)
         names.push_back(p.filename().string());
-    
+
     std::vector<std::string> path_strings;
     path_strings.reserve(songs.size());
     for (const auto& p : songs) path_strings.push_back(p.string());
@@ -43,8 +43,6 @@ void run_ui(std::vector<std::filesystem::path>& songs) {
     int selected = 0;
     auto menu = Menu(&names, &selected);
 
-    std::string now_playing = "nothing playing";
-
     auto screen = ScreenInteractive::Fullscreen();
 
     // --- refresh thread: forces redraw ~2x/sec so the bar ticks ---
@@ -52,11 +50,8 @@ void run_ui(std::vector<std::filesystem::path>& songs) {
     std::thread refresher([&] {
         while (!quit) {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            if (player.finished()) {
-                player.next();
-                int idx = player.current_index();
-                if (idx >= 0) now_playing = names[idx];
-            }
+            if (player.finished())
+                player.next(true);
             screen.Post(Event::Custom);
         }
     });
@@ -72,23 +67,23 @@ void run_ui(std::vector<std::filesystem::path>& songs) {
             menu->Render() | vscroll_indicator | frame | flex,
             separator(),
             hbox({
-                text(" " + now_playing) | flex,
+                text(" ") | flex,
                 text(format_time(cur) + " / " + format_time(len) + " "),
             }),
             gauge(progress) | color(Color::Green),
             hbox({
-                text(player.is_paused() ? " || " : " > "),
-                text(now_playing) | flex,
+                text(player.current_index() < 0 ? " nothing playing" :
+                     (player.is_paused() ? " || " : " > ") + names[player.current_index()]) | flex,
                 text(player.shuffle() ? " [shuffle]" : "") | color(Color::Yellow),
-                text(player.repeat() == RepeatMode::All  ? " [repeat-all]" :
-                     player.repeat() == RepeatMode::One  ? " [repeat-one]" : "") | color(Color::Yellow),
+                text(player.repeat() == RepeatMode::All ? " [repeat-all]" :
+                     player.repeat() == RepeatMode::One ? " [repeat-one]" : "") | color(Color::Yellow),
                 text(" " + format_time(cur) + " / " + format_time(len) + " "),
             }),
         });
     });
 
     component = CatchEvent(component, [&](Event event) {
-        if (event == Event::Character('q')) { screen.Exit(); quit=true; return true; }
+        if (event == Event::Character('q')) { screen.Exit(); return true; }
 
         if (event == Event::Character('j')) {
             selected = std::min(selected + 1, (int)songs.size() - 1);
@@ -100,10 +95,7 @@ void run_ui(std::vector<std::filesystem::path>& songs) {
         }
 
         if (event == Event::Return) {
-            if (player.play_index(selected))
-                now_playing = names[selected];
-            else
-                now_playing = "x failed: " + names[selected];
+            player.play_index(selected);
             return true;
         }
 
