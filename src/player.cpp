@@ -70,22 +70,36 @@ void Player::build_order(int keep_current) {
 }
 
 void Player::next(bool automatic) {
-    if (order_.empty() || current_ < 0) return;
-
-    // repeat-one only loops on NATURAL track end; manual 'n' skips forward
+    if (order_.empty()) return;
+    if (current_ < 0) {
+        order_pos_ = 0;
+        current_ = order_[order_pos_];
+        start_current();
+        return;
+    }
     if (automatic && repeat_ == RepeatMode::One) { start_current(); return; }
 
-    ++order_pos_;
-    if (order_pos_ >= (int)order_.size()) {
-        if (repeat_ == RepeatMode::All) order_pos_ = 0;
-        else return;
+    for (size_t tries = 0; tries < order_.size(); ++tries) {
+        ++order_pos_;
+        if (order_pos_ >= (int)order_.size()) {
+            if (repeat_ == RepeatMode::All) order_pos_ = 0;
+            else return;                       // end of queue, repeat off
+        }
+        current_ = order_[order_pos_];
+        start_current();
+        if (sound_) return;                    // success; unplayable files are skipped
     }
-    current_ = order_[order_pos_];
-    start_current();
 }
 
 void Player::previous() {
-    if (order_.empty() || current_ < 0) return;
+    if (order_.empty()) return;
+
+    if (current_ <0) {
+      order_pos_ = 0;
+      current_ = order_[order_pos_];
+      start_current();
+      return;
+    }
 
     // cmus behavior: if >3s into the track, restart it instead of going back
     if (cursor_seconds() > 3.0f) { seek_seconds(0.0f); return; }
