@@ -12,7 +12,7 @@ Player::Player() {
     if (ma_engine_init(nullptr, engine_) != MA_SUCCESS) {
         delete engine_;
         engine_ = nullptr;
-    }
+    } // creates ma_engiene and does some stuff
 }
 
 Player::~Player() {
