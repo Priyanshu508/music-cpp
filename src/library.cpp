@@ -12,7 +12,12 @@ bool has_audio_extension(const fs::path& p) {
     std::string ext = p.extension().string(); // get only the extension part of file then convert it to string
     std::transform(ext.begin(), ext.end(), ext.begin(),
                    [](unsigned char c) { return std::tolower(c); });
-    return ext == ".mp3" || ext == ".flac" || ext == ".wav";
+    return ext == ".mp3" || ext == ".flac" || ext == ".wav" ||
+           ext == ".m4a" || ext == ".m4b" || ext == ".aac" ||
+           ext == ".opus" || ext == ".ogg" || ext == ".oga" ||
+           ext == ".webm" || ext == ".mp4" || ext == ".mka" ||
+           ext == ".mkv" || ext == ".wma" || ext == ".ape" ||
+           ext == ".wv" || ext == ".mpc" || ext == ".aif" || ext == ".aiff";
 }
 
 } // namespace
